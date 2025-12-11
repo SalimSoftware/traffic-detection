@@ -2,6 +2,6 @@ streamlit
 ultralytics
 pillow
 opencv-python-headless
-gtts
 streamlit-webrtc
 av
+gtts
