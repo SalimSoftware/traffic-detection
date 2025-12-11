@@ -15,7 +15,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# --- 2. LUXURY BLACK & WHITE CSS ---
+# --- 2. LUXURY BLACK & WHITE CSS (UNCHANGED) ---
 st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700;800&family=Montserrat:wght@300;400;500;600&display=swap');
@@ -460,9 +460,10 @@ st.markdown("""
 
 # --- 3. HELPER FUNCTIONS ---
 def text_to_speech(text):
-    """Convert text to speech in French"""
+    """Convert text to speech in English"""
     try:
-        tts = gTTS(text=text, lang='fr', slow=False)
+        # Changed lang to 'en' for English
+        tts = gTTS(text=text, lang='en', slow=False)
         fp = io.BytesIO()
         tts.write_to_fp(fp)
         fp.seek(0)
@@ -489,7 +490,7 @@ def load_model():
 try:
     model = load_model()
 except Exception as e:
-    st.error(f"⚠️ Modèle introuvable: {e}")
+    st.error(f"⚠️ Model not found: {e}")
     st.stop()
 
 # --- 5. SESSION STATE ---
@@ -501,69 +502,74 @@ if 'vocal_alerts' not in st.session_state:
     st.session_state.vocal_alerts = True
 if 'confidence' not in st.session_state:
     st.session_state.confidence = 0.40
+if 'session_count' not in st.session_state:
+    st.session_state.session_count = 0
 
 # --- 6. SIDEBAR ---
 with st.sidebar:
-    st.markdown("## ⚙️ Paramètres")
+    st.markdown("## ⚙️ Settings")
     st.markdown("---")
     
-    st.markdown("### 🎯 Mode de Détection")
+    st.markdown("### 🎯 Detection Mode")
     mode_choice = st.radio(
-        "Choisir le mode:",
-        ["Photo Unique", "Détection Continue"],
+        "Select Mode:",
+        ["Single Shot", "Continuous Detection"],
         index=0 if st.session_state.detection_mode == 'single' else 1
     )
-    st.session_state.detection_mode = 'single' if mode_choice == "Photo Unique" else 'continuous'
+    st.session_state.detection_mode = 'single' if mode_choice == "Single Shot" else 'continuous'
     
     st.markdown("---")
     
-    st.markdown("### 🔧 Seuil de Confiance")
+    st.markdown("### 🔧 Confidence Threshold")
     st.session_state.confidence = st.slider(
-        "Niveau de confiance", 
+        "Confidence Level", 
         min_value=0.0, 
         max_value=1.0, 
         value=st.session_state.confidence,
-        help="Seuil minimum pour la détection"
+        help="Minimum threshold for detection"
     )
     
-    st.markdown(f"**Actuel:** `{st.session_state.confidence:.0%}`")
+    st.markdown(f"**Current:** `{st.session_state.confidence:.0%}`")
     
     st.markdown("---")
     
-    st.markdown("### 🔊 Alertes Vocales")
-    st.markdown("*(Uniquement en mode Photo Unique)*")
+    st.markdown("### 🔊 Vocal Alerts")
+    st.markdown("*(Single Shot Mode Only)*")
     st.session_state.vocal_alerts = st.toggle(
-        "Activer les alertes vocales",
+        "Enable Vocal Alerts",
         value=st.session_state.vocal_alerts,
         disabled=(st.session_state.detection_mode == 'continuous')
     )
     
     if st.session_state.detection_mode == 'single' and st.session_state.vocal_alerts:
-        st.success("🔊 Alertes: Activées")
+        st.success("🔊 Alerts: Enabled")
     else:
-        st.info("🔇 Alertes: Désactivées")
+        st.info("🔇 Alerts: Disabled")
     
     st.markdown("---")
     
-    st.markdown("### 📊 Modèle")
+    # NEW FEATURE: SESSION STATS
+    st.markdown("### 📈 Session Stats")
+    st.write(f"Total Signs Found: **{st.session_state.session_count}**")
+
+    st.markdown("---")
+    
+    st.markdown("### 📊 Model Info")
     st.info("""
     **Architecture:** YOLOv8  
-    **Type:** Détection d'objets  
-    **Dataset:** Panneaux marocains
+    **Task:** Object Detection  
+    **Dataset:** Moroccan Signs
     """)
     
     st.markdown("---")
     
-    st.markdown("### 👥 Équipe")
+    st.markdown("### 👥 Team")
     st.markdown("""
-    **Développeurs:**  
-    Marwane, Salim, Saad
+    **Developers:** Marwane, Salim, Saad
     
-    **Superviseur:**  
-    Dr. Yousra Chtouki
+    **Supervisor:** Dr. Yousra Chtouki
     
-    **Cours:**  
-    Projet Machine Learning
+    **Course:** Machine Learning Project
     """)
 
 # --- 7. MAIN INTERFACE ---
@@ -571,37 +577,37 @@ with st.sidebar:
 # Hero Section
 st.markdown("""
     <div class="hero-section">
-        <div class="hero-title">Détection de Panneaux</div>
+        <div class="hero-title">Traffic Sign Detection</div>
         <div class="hero-divider"></div>
-        <div class="hero-subtitle">Intelligence Artificielle</div>
-        <div class="team-badge">Projet ML</div>
+        <div class="hero-subtitle">Artificial Intelligence</div>
+        <div class="team-badge">ML Project</div>
         <div class="team-badge">Dr. Yousra Chtouki</div>
     </div>
 """, unsafe_allow_html=True)
 
 # Info tip
-st.info("💡 Utilisez le menu ☰ (en haut à gauche) pour accéder aux paramètres")
+st.info("💡 Use the menu ☰ (top left) to access settings")
 
-# Mode Selection
+# Mode Selection Buttons
 col1, col2 = st.columns(2)
 
 with col1:
-    if st.button("📸 Photo Unique", use_container_width=True, 
+    if st.button("📸 Single Shot", use_container_width=True, 
                  type="primary" if st.session_state.detection_mode == 'single' else "secondary",
                  key="btn_single"):
         st.session_state.detection_mode = 'single'
         st.rerun()
 
 with col2:
-    if st.button("🔄 Continue", use_container_width=True,
+    if st.button("🔄 Continuous", use_container_width=True,
                  type="primary" if st.session_state.detection_mode == 'continuous' else "secondary",
                  key="btn_continuous"):
         st.session_state.detection_mode = 'continuous'
         st.rerun()
 
 # Status Bar
-mode_text = "Surveillance Continue" if st.session_state.detection_mode == 'continuous' else "Mode Photo Unique"
-alert_status = "🔊 Activées" if (st.session_state.vocal_alerts and st.session_state.detection_mode == 'single') else "🔇 Désactivées"
+mode_text = "Continuous Monitoring" if st.session_state.detection_mode == 'continuous' else "Single Shot Mode"
+alert_status = "🔊 Enabled" if (st.session_state.vocal_alerts and st.session_state.detection_mode == 'single') else "🔇 Disabled"
 
 st.markdown(f"""
     <div class="status-bar">
@@ -616,53 +622,77 @@ st.markdown(f"""
 # --- CAMERA INPUT ---
 st.markdown("""
     <div class="camera-card">
-        <div class="camera-title">Capture d'Image</div>
-        <div class="camera-subtitle">Pointez vers un panneau et capturez</div>
+        <div class="camera-title">Image Capture</div>
+        <div class="camera-subtitle">Point at a sign and capture</div>
     </div>
 """, unsafe_allow_html=True)
 
-img_buffer = st.camera_input("Caméra", label_visibility="collapsed")
+img_buffer = st.camera_input("Camera", label_visibility="collapsed")
 
 # --- PROCESSING ---
 if img_buffer is not None:
-    with st.spinner("Analyse en cours..."):
+    with st.spinner("Analyzing..."):
         image = Image.open(img_buffer)
         results = model.predict(image, conf=st.session_state.confidence)
+        
+        # Plot results
         res_plotted = results[0].plot()
+        
+        # Get data
         boxes = results[0].boxes
         num_signs = len(boxes)
+        
+        # Update Session Count
+        if num_signs > 0:
+            st.session_state.session_count += num_signs
         
         # Vocal alert ONLY for single shot mode
         if num_signs > 0 and st.session_state.vocal_alerts and st.session_state.detection_mode == 'single':
             sign_names = [model.names[int(box.cls[0])] for box in boxes]
-            alert_text = f"Attention! {num_signs} panneau détecté: {sign_names[0]}"
+            alert_text = f"Attention! {num_signs} sign detected: {sign_names[0]}"
             audio = text_to_speech(alert_text)
             if audio:
                 play_audio(audio)
     
     # --- RESULTS ---
     st.markdown('<div class="results-card">', unsafe_allow_html=True)
-    st.markdown('<div class="results-title">Résultats</div>', unsafe_allow_html=True)
+    st.markdown('<div class="results-title">Results</div>', unsafe_allow_html=True)
     st.markdown('</div>', unsafe_allow_html=True)
     
     # Metrics
-    st.metric("🎯 Panneaux Détectés", num_signs, 
-             delta="Actif" if num_signs > 0 else "Aucun")
+    st.metric("🎯 Signs Detected", num_signs, 
+             delta="Active" if num_signs > 0 else "None")
     
     if num_signs > 0:
         avg_conf = sum([float(box.conf[0]) for box in boxes]) / len(boxes)
-        st.metric("📊 Confiance Moyenne", f"{avg_conf:.1%}")
+        st.metric("📊 Avg Confidence", f"{avg_conf:.1%}")
     
     # Image Display
     st.markdown('<div class="image-display">', unsafe_allow_html=True)
     st.image(res_plotted, use_container_width=True)
     st.markdown('</div>', unsafe_allow_html=True)
     
+    # NEW FEATURE: DOWNLOAD BUTTON
+    # Convert plotted image to bytes for download
+    img_byte_arr = io.BytesIO()
+    # Convert numpy array (from plot) back to PIL image
+    im_pil = Image.fromarray(res_plotted[..., ::-1]) # Convert BGR to RGB
+    im_pil.save(img_byte_arr, format='JPEG')
+    img_byte_arr = img_byte_arr.getvalue()
+    
+    st.download_button(
+        label="⬇️ Download Annotated Image",
+        data=img_byte_arr,
+        file_name="detected_sign.jpg",
+        mime="image/jpeg",
+        use_container_width=True
+    )
+    
     # Detection Details
     if num_signs > 0:
-        st.success("✓ Panneaux identifiés avec succès")
+        st.success("✓ Signs identified successfully")
         
-        st.markdown("### Panneaux Détectés")
+        st.markdown("### Detected Signs")
         
         for i, box in enumerate(boxes, 1):
             cls_id = int(box.cls[0])
@@ -672,7 +702,7 @@ if img_buffer is not None:
             st.markdown(f"""
                 <div class="detection-item">
                     <div>
-                        <div class="detection-number">Panneau #{i}</div>
+                        <div class="detection-number">Sign #{i}</div>
                         <div class="detection-name">{name}</div>
                     </div>
                     <div class="detection-conf">{conf:.0%}</div>
@@ -680,44 +710,44 @@ if img_buffer is not None:
             """, unsafe_allow_html=True)
         
         # Technical Details
-        with st.expander("Détails Techniques"):
+        with st.expander("Technical Details"):
             detected_data = []
             for box in boxes:
                 cls_id = int(box.cls[0])
                 conf = float(box.conf[0])
                 name = model.names[cls_id]
                 detected_data.append({
-                    "panneau": name,
-                    "confiance": f"{conf:.2%}"
+                    "sign": name,
+                    "confidence": f"{conf:.2%}"
                 })
             
             st.json({
                 "total": num_signs,
-                "seuil": st.session_state.confidence,
-                "confiance_moyenne": f"{avg_conf:.2%}",
-                "alertes_vocales": st.session_state.vocal_alerts and st.session_state.detection_mode == 'single',
-                "détections": detected_data
+                "threshold": st.session_state.confidence,
+                "avg_confidence": f"{avg_conf:.2%}",
+                "vocal_alerts": st.session_state.vocal_alerts and st.session_state.detection_mode == 'single',
+                "detections": detected_data
             })
     else:
-        st.warning("Aucun panneau détecté")
+        st.warning("No signs detected")
         st.info("""
-        **Conseils:**
-        - Rapprochez-vous du panneau
-        - Assurez un bon éclairage
-        - Centrez le panneau
-        - Stabilisez la caméra
+        **Tips:**
+        - Move closer to the sign
+        - Ensure good lighting
+        - Center the sign
+        - Stabilize the camera
         """)
 
 # --- FOOTER ---
 st.markdown("""
     <div class="footer">
-        <div class="footer-title">Projet de Détection de Panneaux</div>
+        <div class="footer-title">Traffic Sign Detection Project</div>
         <div class="footer-divider"></div>
         <div class="footer-text">
-            <strong>Équipe:</strong> Marwane, Salim, Saad<br>
-            <strong>Superviseur:</strong> Dr. Yousra Chtouki<br>
-            Projet Machine Learning<br><br>
-            YOLOv8 • Maroc • 2024
+            <strong>Team:</strong> Marwane, Salim, Saad<br>
+            <strong>Supervisor:</strong> Dr. Yousra Chtouki<br>
+            Machine Learning Project<br><br>
+            YOLOv8 • Morocco • 2024
         </div>
     </div>
 """, unsafe_allow_html=True)
